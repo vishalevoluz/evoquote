@@ -46,7 +46,7 @@ export function CfgView({ data }: { data: CfgParseResult }) {
               baseName + '_cstics.csv'
             )
           }
-          className="px-3 py-1.5 rounded bg-[#d9631e] text-[#1c1f22] text-xs font-semibold"
+          className="px-3 py-1.5 rounded bg-secondary text-[#faf8f3] text-xs font-semibold"
         >
           Download CSTICS CSV
         </button>
@@ -58,7 +58,7 @@ export function CfgView({ data }: { data: CfgParseResult }) {
               baseName + '_conditions.csv'
             )
           }
-          className="px-3 py-1.5 rounded bg-[#d9631e] text-[#1c1f22] text-xs font-semibold"
+          className="px-3 py-1.5 rounded bg-secondary text-[#faf8f3] text-xs font-semibold"
         >
           Download CONDITIONS CSV
         </button>
@@ -100,8 +100,8 @@ function Info({ label, value }: { label: string; value: string }) {
 
 function Table({ title, count, head, rows }: { title: string; count: number; head: string[]; rows: string[][] }) {
   return (
-    <div className="border border-[#33383d] rounded-lg mb-4 overflow-hidden bg-[#202428]">
-      <div className="px-4 py-2.5 bg-[#2b3036] flex justify-between items-center">
+    <div className="border border-primary-border rounded-lg mb-4 overflow-hidden bg-primary-surface">
+      <div className="px-4 py-2.5 bg-primary-strong flex justify-between items-center">
         <h4 className="text-[#faf8f3] text-xs font-semibold m-0">{title}</h4>
         <span className="text-[#8b9198] font-mono text-[11px]">{count} rows</span>
       </div>

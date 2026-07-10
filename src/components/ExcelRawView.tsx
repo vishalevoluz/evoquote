@@ -17,8 +17,8 @@ export function ExcelRawView({ sheets }: { sheets: RawSheet[] }) {
             onClick={() => setActive(i)}
             className={`px-3 py-1.5 rounded text-xs font-mono border ${
               i === active
-                ? 'bg-[#d9631e] text-[#1c1f22] border-[#d9631e] font-semibold'
-                : 'bg-transparent text-[#9aa1a8] border-[#454b52] hover:border-[#d9631e]'
+                ? 'bg-secondary text-[#faf8f3] border-secondary font-semibold'
+                : 'bg-transparent text-[#9aa1a8] border-primary-border hover:border-secondary'
             }`}
           >
             {s.name} <span className="opacity-60">({s.rows.length})</span>

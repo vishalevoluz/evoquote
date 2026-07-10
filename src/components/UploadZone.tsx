@@ -21,7 +21,7 @@ export function UploadZone({ onFile, busy }: { onFile: (file: File) => void; bus
         if (file) onFile(file);
       }}
       className={`border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-colors ${
-        drag ? 'border-[#d9631e] bg-[#d9631e0f]' : 'border-[#454b52] hover:border-[#d9631e]'
+        drag ? 'border-secondary bg-secondary/[0.06]' : 'border-primary-border hover:border-secondary'
       }`}
     >
       <input

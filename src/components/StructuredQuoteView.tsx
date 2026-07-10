@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { ParsedQuote } from '@/types';
+import { downloadQuotePdf } from '@/lib/pdf';
 
 function fmtMoney(v: number | null) {
   if (v == null) return '—';
@@ -55,6 +56,10 @@ export function StructuredQuoteView({
     }
   }
 
+  function handleDownloadPdf() {
+    downloadQuotePdf(quote, { customer, email, phone, owner, stage });
+  }
+
   return (
     <div>
       {/* Nameplate */}
@@ -95,10 +100,10 @@ export function StructuredQuoteView({
 
       {/* Sections */}
       {quote.sections.map((s, si) => (
-        <div key={si} className="border border-[#33383d] rounded-lg mb-3 overflow-hidden bg-[#202428]">
+        <div key={si} className="border border-primary-border rounded-lg mb-3 overflow-hidden bg-primary-surface">
           <div
             onClick={() => setCollapsed((c) => ({ ...c, [si]: !c[si] }))}
-            className="px-3.5 py-2 bg-[#2b3036] text-[#faf8f3] text-xs font-semibold flex justify-between items-center cursor-pointer select-none"
+            className="px-3.5 py-2 bg-primary-strong text-[#faf8f3] text-xs font-semibold flex justify-between items-center cursor-pointer select-none"
           >
             <span>
               {s.name} <span className="text-[#666e77] font-normal">({s.items.length})</span>
@@ -171,19 +176,27 @@ export function StructuredQuoteView({
               <span className="font-mono">{fmtMoney(s.grossTotal ?? s.netTotal)}</span>
             </div>
           ))}
-        <div className="flex justify-between items-baseline mt-2.5 pt-2.5 border-t-2 border-[#a8481a]">
+        <div className="flex justify-between items-baseline mt-2.5 pt-2.5 border-t-2 border-secondary-dark">
           <span className="text-xs font-bold uppercase tracking-wide text-[#2a2724]">Total Price</span>
-          <span className="font-mono text-xl font-bold text-[#a8481a]">{fmtMoney(quote.grandTotal)}</span>
+          <span className="font-mono text-xl font-bold text-secondary-dark">{fmtMoney(quote.grandTotal)}</span>
         </div>
       </div>
 
-      <button
-        onClick={handleSave}
-        disabled={saving}
-        className="px-4 py-2 rounded bg-[#d9631e] text-[#1c1f22] font-semibold text-xs disabled:opacity-50"
-      >
-        {saving ? 'Saving…' : 'Save to CRM'}
-      </button>
+      <div className="flex gap-2">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="px-4 py-2 rounded bg-secondary text-[#faf8f3] font-semibold text-xs disabled:opacity-50"
+        >
+          {saving ? 'Saving…' : 'Save to CRM'}
+        </button>
+        <button
+          onClick={handleDownloadPdf}
+          className="px-4 py-2 rounded bg-[#faf8f3] text-primary font-semibold text-xs hover:bg-white"
+        >
+          Download PDF
+        </button>
+      </div>
     </div>
   );
 }

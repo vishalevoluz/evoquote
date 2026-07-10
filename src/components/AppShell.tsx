@@ -68,11 +68,12 @@ export function AppShell({ userEmail }: { userEmail: string | null }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#1c1f22]">
-      <div className="flex items-center justify-between px-6 py-3.5 bg-[#25292d] border-b-2 border-[#d9631e]">
+    <div className="min-h-screen bg-primary">
+      <div className="flex items-center justify-between px-6 py-3.5 bg-primary-panel border-b-2 border-secondary">
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded bg-[#d9631e] flex items-center justify-center font-mono font-bold text-[#1c1f22] text-[13px]">
-            AQ
+          <div className="bg-white rounded px-2 py-1 flex items-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="https://autokuca.hr/wp-content/uploads/2022/05/akglogo.png" alt="AutoKuca" className="h-7 w-auto object-contain" />
           </div>
           <div>
             <h1 className="text-[#faf8f3] text-base font-semibold m-0">AutoKuca Quote</h1>
@@ -125,7 +126,7 @@ export function AppShell({ userEmail }: { userEmail: string | null }) {
       </div>
 
       {toast && (
-        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 bg-[#d9631e] text-[#1c1f22] px-4.5 py-2.5 rounded-md text-sm font-semibold shadow-lg">
+        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 bg-secondary text-[#faf8f3] px-4.5 py-2.5 rounded-md text-sm font-semibold shadow-lg">
           {toast}
         </div>
       )}
