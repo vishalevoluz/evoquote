@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Quote → CRM Record",
+  title: "AutoKuca Quote",
   description: "Excel & CFG quote structuring tool with CRM sync",
 };
 

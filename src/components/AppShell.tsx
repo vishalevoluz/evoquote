@@ -71,11 +71,11 @@ export function AppShell({ userEmail }: { userEmail: string | null }) {
     <div className="min-h-screen bg-[#1c1f22]">
       <div className="flex items-center justify-between px-6 py-3.5 bg-[#25292d] border-b-2 border-[#d9631e]">
         <div className="flex items-center gap-2.5">
-          <div className="w-8.5 h-8.5 rounded bg-[#d9631e] flex items-center justify-center font-mono font-bold text-[#1c1f22] text-[13px] w-9 h-9">
-            RX
+          <div className="w-9 h-9 rounded bg-[#d9631e] flex items-center justify-center font-mono font-bold text-[#1c1f22] text-[13px]">
+            AQ
           </div>
           <div>
-            <h1 className="text-[#faf8f3] text-base font-semibold m-0">Quote → CRM Record</h1>
+            <h1 className="text-[#faf8f3] text-base font-semibold m-0">AutoKuca Quote</h1>
             <span className="text-[#8b9198] text-[11px] font-mono uppercase tracking-wide">
               Excel &amp; CFG structuring tool
             </span>

@@ -42,9 +42,9 @@ export default function LoginPage() {
       <div className="w-full max-w-sm bg-[#25292d] border border-[#33383d] rounded-lg p-8">
         <div className="flex items-center gap-2 mb-6">
           <div className="w-9 h-9 rounded bg-[#d9631e] flex items-center justify-center font-mono font-bold text-[#1c1f22] text-sm">
-            RX
+            AQ
           </div>
-          <h1 className="text-[#faf8f3] font-semibold text-base">Quote → CRM Record</h1>
+          <h1 className="text-[#faf8f3] font-semibold text-base">AutoKuca Quote</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

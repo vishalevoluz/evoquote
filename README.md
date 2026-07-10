@@ -1,4 +1,4 @@
-# Quote → CRM Record (Next.js)
+# AutoKuca Quote (Next.js)
 
 Upload an unstructured `.xlsx` quote export (all sheets extracted) or a `.cfg`
 SAP variant-configuration XML file. The app parses it into a structured,
