@@ -1,8 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import type { ParsedQuote } from '@/types';
+import type { CompanyInfo, InvoiceMeta, TechSpecLanguage, ParsedQuote } from '@/types';
 import { downloadQuotePdf } from '@/lib/pdf';
+import { downloadInvoicePdf, previewInvoicePdf } from '@/lib/invoicePdf';
+import { DEFAULT_COMPANY_INFO, downloadOfferPdf, previewOfferPdf } from '@/lib/offerPdf';
+
+function todayIso() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function plusDaysIso(days: number) {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
 
 function fmtMoney(v: number | null) {
   if (v == null) return '—';
@@ -25,6 +37,26 @@ export function StructuredQuoteView({
   const [stage, setStage] = useState<'new' | 'quoted' | 'won' | 'lost'>('quoted');
   const [collapsed, setCollapsed] = useState<Record<number, boolean>>({});
   const [saving, setSaving] = useState(false);
+  const [invoiceOpen, setInvoiceOpen] = useState(false);
+  const [invoiceNumber, setInvoiceNumber] = useState('');
+  const [invoiceDate, setInvoiceDate] = useState(todayIso());
+  const [dueDate, setDueDate] = useState(plusDaysIso(30));
+  const [paymentTerms, setPaymentTerms] = useState('Net 30');
+  const [currency, setCurrency] = useState<InvoiceMeta['currency']>('EUR');
+  const [notes, setNotes] = useState('');
+  const [company, setCompany] = useState<CompanyInfo>(DEFAULT_COMPANY_INFO);
+  const [customerStreet, setCustomerStreet] = useState('');
+  const [customerPostalCode, setCustomerPostalCode] = useState('');
+  const [customerCity, setCustomerCity] = useState('');
+  const [customerOib, setCustomerOib] = useState('');
+  const [place, setPlace] = useState(DEFAULT_COMPANY_INFO.city);
+  const [validUntil, setValidUntil] = useState(plusDaysIso(15));
+  const [techSpecLanguage, setTechSpecLanguage] = useState<TechSpecLanguage>('hr');
+  const [offerBusy, setOfferBusy] = useState(false);
+
+  function updateCompany<K extends keyof CompanyInfo>(key: K, value: CompanyInfo[K]) {
+    setCompany((c) => ({ ...c, [key]: value }));
+  }
 
   async function handleSave() {
     setSaving(true);
@@ -58,6 +90,79 @@ export function StructuredQuoteView({
 
   function handleDownloadPdf() {
     downloadQuotePdf(quote, { customer, email, phone, owner, stage });
+  }
+
+  function validateInvoiceInputs(): boolean {
+    if (!customer.trim()) {
+      onSaved('Enter a customer name before generating an invoice.');
+      return false;
+    }
+    if (!invoiceNumber.trim()) {
+      onSaved('Enter an invoice number before generating an invoice.');
+      return false;
+    }
+    return true;
+  }
+
+  function handleDownloadInvoicePdf() {
+    if (!validateInvoiceInputs()) return;
+    downloadInvoicePdf(
+      quote,
+      { customer, email, phone },
+      { invoiceNumber, invoiceDate, dueDate, paymentTerms, currency, notes }
+    );
+  }
+
+  function handlePreviewInvoicePdf() {
+    if (!validateInvoiceInputs()) return;
+    previewInvoicePdf(
+      quote,
+      { customer, email, phone },
+      { invoiceNumber, invoiceDate, dueDate, paymentTerms, currency, notes }
+    );
+  }
+
+  function validateOfferInputs(): boolean {
+    if (!customer.trim()) {
+      onSaved('Enter a customer name before generating an offer.');
+      return false;
+    }
+    if (!invoiceNumber.trim()) {
+      onSaved('Enter an offer number before generating an offer.');
+      return false;
+    }
+    return true;
+  }
+
+  function offerArgs() {
+    return [
+      quote,
+      company,
+      customer,
+      { street: customerStreet, postalCode: customerPostalCode, city: customerCity, oib: customerOib },
+      { offerNumber: invoiceNumber, offerDate: invoiceDate, validUntil, place },
+      techSpecLanguage,
+    ] as const;
+  }
+
+  async function handlePreviewOfferPdf() {
+    if (!validateOfferInputs()) return;
+    setOfferBusy(true);
+    try {
+      await previewOfferPdf(...offerArgs());
+    } finally {
+      setOfferBusy(false);
+    }
+  }
+
+  async function handleDownloadOfferPdf() {
+    if (!validateOfferInputs()) return;
+    setOfferBusy(true);
+    try {
+      await downloadOfferPdf(...offerArgs());
+    } finally {
+      setOfferBusy(false);
+    }
   }
 
   return (
@@ -182,6 +287,115 @@ export function StructuredQuoteView({
         </div>
       </div>
 
+      {/* Invoice details */}
+      <div className="border border-[#d8d2c4] rounded-lg mb-4 overflow-hidden">
+        <div
+          onClick={() => setInvoiceOpen((o) => !o)}
+          className="px-3.5 py-2 bg-[#eeeae1] text-[#2a2724] text-xs font-semibold flex justify-between items-center cursor-pointer select-none"
+        >
+          <span>Invoice Details</span>
+          <span className="text-[#8a8270] font-mono text-[10px]">{invoiceOpen ? 'Hide' : 'Show'}</span>
+        </div>
+        {invoiceOpen && (
+          <div className="bg-[#fffdf8] p-4 grid grid-cols-2 gap-3">
+            <Field label="Invoice Number" value={invoiceNumber} onChange={setInvoiceNumber} placeholder="INV-0001" />
+            <div>
+              <label className="block text-[9.5px] uppercase tracking-wider text-[#8a8270] font-mono mb-1">
+                Currency
+              </label>
+              <select
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value as InvoiceMeta['currency'])}
+                className="w-full text-sm px-2 py-1.5 border border-[#d8d2c4] rounded bg-[#fffdf8] text-[#2a2724]"
+              >
+                <option value="EUR">EUR (€)</option>
+                <option value="USD">USD ($)</option>
+                <option value="GBP">GBP (£)</option>
+              </select>
+            </div>
+            <Field label="Invoice Date" value={invoiceDate} onChange={setInvoiceDate} placeholder="YYYY-MM-DD" />
+            <Field label="Due Date" value={dueDate} onChange={setDueDate} placeholder="YYYY-MM-DD" />
+            <Field label="Payment Terms" value={paymentTerms} onChange={setPaymentTerms} placeholder="Net 30" />
+            <div className="col-span-2">
+              <label className="block text-[9.5px] uppercase tracking-wider text-[#8a8270] font-mono mb-1">
+                Notes
+              </label>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Optional note printed at the bottom of the invoice"
+                rows={2}
+                className="w-full text-sm px-2 py-1.5 border border-[#d8d2c4] rounded bg-[#fffdf8] text-[#2a2724] outline-none resize-none"
+              />
+            </div>
+
+            <div className="col-span-2 pt-3 mt-1 border-t border-[#e4dccb]">
+              <h5 className="text-[10px] uppercase tracking-wider text-[#8a8270] font-mono mb-2">Company Info (Offer PDF)</h5>
+            </div>
+            <Field label="Company Name" value={company.name} onChange={(v) => updateCompany('name', v)} />
+            <Field label="OIB" value={company.oib} onChange={(v) => updateCompany('oib', v)} />
+            <Field label="Address" value={company.address} onChange={(v) => updateCompany('address', v)} />
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Postal Code" value={company.postalCode} onChange={(v) => updateCompany('postalCode', v)} />
+              <Field label="City" value={company.city} onChange={(v) => updateCompany('city', v)} />
+            </div>
+            <Field label="Telephone" value={company.phone} onChange={(v) => updateCompany('phone', v)} />
+            <Field label="Fax" value={company.fax} onChange={(v) => updateCompany('fax', v)} />
+            <Field label="Email" value={company.email} onChange={(v) => updateCompany('email', v)} />
+            <Field label="IBAN" value={company.iban} onChange={(v) => updateCompany('iban', v)} />
+            <Field label="Bank Name" value={company.bankName} onChange={(v) => updateCompany('bankName', v)} />
+
+            <div className="col-span-2 pt-3 mt-1 border-t border-[#e4dccb]">
+              <h5 className="text-[10px] uppercase tracking-wider text-[#8a8270] font-mono mb-2">Customer Address (Offer PDF)</h5>
+            </div>
+            <Field label="Street Address" value={customerStreet} onChange={setCustomerStreet} placeholder="Street and number" />
+            <Field label="Customer OIB" value={customerOib} onChange={setCustomerOib} placeholder="Optional" />
+            <Field label="Postal Code" value={customerPostalCode} onChange={setCustomerPostalCode} />
+            <Field label="City" value={customerCity} onChange={setCustomerCity} />
+
+            <div className="col-span-2 pt-3 mt-1 border-t border-[#e4dccb]">
+              <h5 className="text-[10px] uppercase tracking-wider text-[#8a8270] font-mono mb-2">Offer Info (Offer PDF)</h5>
+            </div>
+            <Field label="Place" value={place} onChange={setPlace} placeholder="e.g. Čakovec" />
+            <Field label="Valid Until" value={validUntil} onChange={setValidUntil} placeholder="YYYY-MM-DD" />
+            <div>
+              <label className="block text-[9.5px] uppercase tracking-wider text-[#8a8270] font-mono mb-1">
+                Tech Spec Language
+              </label>
+              <select
+                value={techSpecLanguage}
+                onChange={(e) => setTechSpecLanguage(e.target.value as TechSpecLanguage)}
+                className="w-full text-sm px-2 py-1.5 border border-[#d8d2c4] rounded bg-[#fffdf8] text-[#2a2724]"
+              >
+                <option value="hr">Croatian</option>
+                <option value="en">English</option>
+              </select>
+            </div>
+
+            <p className="col-span-2 text-[10.5px] text-[#8a8270] font-mono">
+              Offer Number / Offer Date reuse the Invoice Number / Invoice Date fields above.
+            </p>
+
+            <div className="col-span-2 flex gap-2">
+              <button
+                onClick={handlePreviewOfferPdf}
+                disabled={offerBusy}
+                className="px-4 py-2 rounded border border-primary-strong text-primary font-semibold text-xs hover:bg-[#f2eee4] disabled:opacity-50"
+              >
+                {offerBusy ? 'Working…' : 'Preview Offer PDF'}
+              </button>
+              <button
+                onClick={handleDownloadOfferPdf}
+                disabled={offerBusy}
+                className="px-4 py-2 rounded bg-primary-strong text-[#faf8f3] font-semibold text-xs hover:bg-primary-hover disabled:opacity-50"
+              >
+                {offerBusy ? 'Working…' : 'Download Offer PDF'}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
       <div className="flex gap-2">
         <button
           onClick={handleSave}
@@ -195,6 +409,18 @@ export function StructuredQuoteView({
           className="px-4 py-2 rounded bg-[#faf8f3] text-primary font-semibold text-xs hover:bg-white"
         >
           Download PDF
+        </button>
+        <button
+          onClick={handlePreviewInvoicePdf}
+          className="px-4 py-2 rounded border border-primary-strong text-primary font-semibold text-xs hover:bg-[#f2eee4]"
+        >
+          Preview Invoice PDF
+        </button>
+        <button
+          onClick={handleDownloadInvoicePdf}
+          className="px-4 py-2 rounded bg-primary-strong text-[#faf8f3] font-semibold text-xs hover:bg-primary-hover"
+        >
+          Download Invoice PDF
         </button>
       </div>
     </div>

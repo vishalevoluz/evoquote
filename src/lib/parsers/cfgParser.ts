@@ -1,5 +1,5 @@
 import { XMLParser } from 'fast-xml-parser';
-import type { CfgParseResult, CfgCstic, CfgCondition } from '@/types';
+import type { CfgParseResult, CfgCstic, CfgCondition, ParsedQuote } from '@/types';
 
 const parser = new XMLParser({
   ignoreAttributes: false,
@@ -28,6 +28,9 @@ export function parseCfgFile(xmlText: string, fileName: string): CfgParseResult 
     materialNo: inst?.OBJ_KEY ?? '',
     qty: inst?.QTY ?? '',
     unit: inst?.UNIT ?? '',
+    classType: inst?.CLASS_TYPE ?? '',
+    objType: inst?.OBJ_TYPE ?? '',
+    language: config?.LANGUAGE ?? '',
   };
 
   const csticRows: CfgCstic[] = cstics.map((c: Record<string, string>) => ({
@@ -47,4 +50,52 @@ export function parseCfgFile(xmlText: string, fileName: string): CfgParseResult 
   }));
 
   return { header, cstics: csticRows, conditions: conditionRows };
+}
+
+function toNum(v: string): number | null {
+  if (!v) return null;
+  const n = parseFloat(v.replace(/,/g, ''));
+  return Number.isFinite(n) ? n : null;
+}
+
+/**
+ * Adapts CFG pricing conditions into the same ParsedQuote shape used by the
+ * Excel flow, so the invoice generator can be reused for CFG uploads too.
+ * CFG conditions carry a single calculated RATEVALUE (no separate net/gross),
+ * so it's used for both unit and total price.
+ */
+export function cfgToParsedQuote(data: CfgParseResult): ParsedQuote {
+  const { header, conditions } = data;
+
+  const items = conditions.map((c) => {
+    const amount = toNum(c.rateValue);
+    return {
+      code: c.type,
+      feature: c.name,
+      value: [c.pricingValue, c.pricingUnit].filter(Boolean).join(' '),
+      description: '',
+      unitPriceGross: amount,
+      unitPriceNet: null,
+      totalPriceNet: null,
+      totalPriceGross: amount,
+      conditionType: c.rateUnit,
+    };
+  });
+
+  const grandTotal = items.length
+    ? items.reduce((sum, it) => sum + (it.totalPriceGross || 0), 0)
+    : null;
+
+  return {
+    title: [header.kbName, header.kbVersion].filter(Boolean).join(' / '),
+    date: '',
+    kbVersion: header.kbVersion,
+    customer: '',
+    quantity: [header.qty, header.unit].filter(Boolean).join(' '),
+    materialNo: header.materialNo,
+    sections: [{ name: 'Pricing Conditions', items, subtotal: grandTotal ?? 0 }],
+    summary: [{ label: 'Total price for all items', netTotal: null, grossTotal: grandTotal, condition: '' }],
+    grandTotal,
+    sourceFile: header.fileName,
+  };
 }
